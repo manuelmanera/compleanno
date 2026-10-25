@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Slot Caramella</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:14px;
+  background:radial-gradient(ellipse at top,#51402e,#171411 70%);
+  font-family:Arial,sans-serif;
+  color:#fff4d7;
+}
+
+.cabinet{
+  width:min(560px,100%);
+  background:linear-gradient(145deg,#8b2222,#481010);
+  border:5px solid #d9ad50;
+  border-radius:24px;
+  padding:20px;
+  box-shadow:0 0 0 5px #32100d,0 20px 60px #0009;
+  text-align:center;
+}
+
+.brand{
+  font-weight:900;
+  letter-spacing:.16em;
+  color:#ffd76b;
+  font-size:13px;
+}
+
+.title{
+  font-size:clamp(30px,7vw,44px);
+  font-weight:1000;
+  margin:8px 0 18px;
+  text-shadow:0 3px #45100a;
+}
+
+.marquee{
+  border:3px solid #f6d77b;
+  border-radius:12px;
+  background:#1b120d;
+  padding:10px;
+  box-shadow:inset 0 0 20px #000;
+}
+
+.reels{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.reel{
+  height:112px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(#fff8e9,#e4d4b4);
+  border-radius:8px;
+  border:3px solid #a78b5a;
+  color:#251b13;
+  font-size:clamp(48px,12vw,72px);
+  box-shadow:inset 0 5px 8px #0002;
+  overflow:hidden;
+}
+
+.reel.spinning{
+  animation:shake .12s infinite alternate;
+}
+
+@keyframes shake{
+  from{transform:translateY(-3px)}
+  to{transform:translateY(3px)}
+}
+
+.leverrow{
+  display:flex;
+  justify-content:center;
+  margin:20px 0;
+}
+
+.spin{
+  border:0;
+  border-radius:50px;
+  background:linear-gradient(#ffe88c,#d49a23);
+  color:#4b1a0e;
+  font-weight:1000;
+  font-size:18px;
+  padding:16px 28px;
+  box-shadow:0 5px #8e5b14;
+  cursor:pointer;
+}
+
+.spin:active{
+  transform:translateY(3px);
+  box-shadow:0 2px #8e5b14;
+}
+
+.spin:disabled{
+  opacity:.7;
+  cursor:default;
+}
+
+.result{
+  min-height:32px;
+  font-weight:900;
+  font-size:20px;
+  margin:12px 0;
+}
+
+.stats{
+  display:flex;
+  justify-content:center;
+  gap:24px;
+  flex-wrap:wrap;
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid #d9ad5066;
+}
+
+.stat strong{
+  display:block;
+  font-size:24px;
+  color:#ffd76b;
+}
+
+.stat span{
+  font-size:11px;
+  color:#e7c9a7;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.tiny{
+  font-size:12px;
+  color:#e7c9a7;
+  line-height:1.5;
+}
+</style>
+</head>
+
+<body>
+<main class="cabinet">
+
+  <div class="brand">★ CANDY JACKPOT ★</div>
+  <div class="title">SLOT CARAMELLA</div>
+
+  <div class="marquee">
+    <div class="reels">
+      <div class="reel" id="r0">🍒</div>
+      <div class="reel" id="r1">🍋</div>
+      <div class="reel" id="r2">🍬</div>
+    </div>
+  </div>
+
+  <div class="leverrow">
+    <button class="spin" id="spin">🎰 TIRA LA LEVA</button>
+  </div>
+
+  <div class="result" id="result">
+    Tenta la fortuna!
+  </div>
+
+  <div class="tiny">
+    Tre caramelle uguali = premio!
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <strong id="total">0</strong>
+      <span>Giri</span>
+    </div>
+    <div class="stat">
+      <strong id="wins">0</strong>
+      <span>Vincite</span>
+    </div>
+    <div class="stat">
+      <strong>40%</strong>
+      <span>Probabilità</span>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const SYMBOLS = ["🍒","🍋","🍇","⭐","🍬","🍭"];
+const WIN_CHANCE = 40;
+
+let spinning = false;
+let total = 0;
+let wins = 0;
+
+const $ = id => document.getElementById(id);
+
+function randomSymbol(){
+  return SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)];
+}
+
+function wait(ms){
+  return new Promise(resolve => setTimeout(resolve,ms));
+}
+
+async function spin(){
+  if(spinning) return;
+
+  spinning = true;
+  $("spin").disabled = true;
+  $("result").textContent = "La slot sta girando…";
+
+  document.querySelectorAll(".reel")
+    .forEach(el => el.classList.add("spinning"));
+
+  // Ogni giro ha il 40% di probabilità di essere vincente.
+  const won = Math.random()*100 < WIN_CHANCE;
+
+  let finalSymbols;
+
+  if(won){
+    // Jackpot: tre simboli identici.
+    const symbol = randomSymbol();
+    finalSymbols = [symbol,symbol,symbol];
+  }else{
+    // Risultato perdente: mai tre simboli uguali.
+    const a = randomSymbol();
+    let b = randomSymbol();
+    while(b === a) b = randomSymbol();
+
+    let c = randomSymbol();
+    while(c === a || c === b) c = randomSymbol();
+
+    finalSymbols = [a,b,c];
+  }
+
+  // Animazione dei rulli.
+  for(let step=0;step<18;step++){
+    for(let i=0;i<3;i++){
+      $("r"+i).textContent = randomSymbol();
+    }
+    await wait(70 + step*5);
+  }
+
+  finalSymbols.forEach((symbol,i)=>{
+    $("r"+i).textContent = symbol;
+  });
+
+  total++;
+
+  if(won){
+    wins++;
+    $("result").textContent = "🎉 JACKPOT! HAI VINTO UNA CARAMELLA!";
+  }else{
+    $("result").textContent = "🍋 Non questa volta! Riprova!";
+  }
+
+  $("total").textContent = total;
+  $("wins").textContent = wins;
+
+  document.querySelectorAll(".reel")
+    .forEach(el => el.classList.remove("spinning"));
+
+  spinning = false;
+  $("spin").disabled = false;
+}
+
+$("spin").addEventListener("click",spin);
+</script>
+</body>
+</html>
